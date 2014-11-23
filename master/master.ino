@@ -1,5 +1,13 @@
 #include <Process.h>
 
+  //lets get some things straight
+  //this never changes
+  const char webAddress[] = "http://54.148.158.124/parking/"; 
+  //this changes depending on the lot #
+  const char lot[] = "35/";
+  //this changes based on the direction (entry or exit)
+  const char direct[] = "entry";
+
 void setup() {
   Bridge.begin();
   Serial.begin(9600);
@@ -21,7 +29,7 @@ void runCurl() {
   p.begin("curl");
   p.addParameter("-X");
   p.addParameter("PUT");
-  p.addParameter("http://54.148.158.124/parking/35/entry");
+  //p.addParameter(webAddress + lot + direct);
   p.run();
   
   while(p.available()>0) {
