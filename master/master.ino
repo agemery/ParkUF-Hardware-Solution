@@ -2,11 +2,11 @@
 
   //lets get some things straight
   //this never changes
-  const char webAddress[] = "http://54.148.158.124/parking/"; 
+  const String webAddress = "http://54.148.158.124/parking/"; 
   //this changes depending on the lot #
-  const char lot[] = "35/";
+  const String lot = "35/";
   //this changes based on the direction (entry or exit)
-  const char direct[] = "entry";
+  const String direct = "entry";
 
 void setup() {
   Bridge.begin();
@@ -29,7 +29,7 @@ void runCurl() {
   p.begin("curl");
   p.addParameter("-X");
   p.addParameter("PUT");
-  //p.addParameter(webAddress + lot + direct);
+  p.addParameter(webAddress + lot + direct);
   p.run();
   
   while(p.available()>0) {
