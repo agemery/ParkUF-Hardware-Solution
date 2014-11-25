@@ -1,13 +1,27 @@
 //Sonar stuff
-int sonarPin = 8; //the io pin we are using
-float threshhold = 200; //distance threshold in centimeters 
-//anything under threshold counts as a car
+const int sonarPin; //the io pin we are using
 
 //PIR stuff
 int calibrationTime = 10; //seconds to allow calibration
-int pirPin = 11;
+//miliseconds sensor has to be low before all motion has stopped
+long unsigned int pause = 100; 
+const int pirPin = 11;
+int detectionWindow = 2; //seconds
 
-void setupPir() {
+public void setupSensors(int pir, int sonar) {
+  setupPir(pir);
+  setupSonar(sonar);
+}
+
+
+private void setupSonar(sonar) {
+  //not too much to do here
+  sonarPin = sonar;
+  pinMode(sonarPin, OUTPUT);
+}
+
+private void setupPir(pir) {
+  pirPin = pir;
   pinMode(pirPin, INPUT);
   digitalWrite(pirPin, LOW);
   
@@ -16,16 +30,17 @@ void setupPir() {
   for(int i=0; i<calibrationTime; i++) {
     delay(1000); //delay is in miliseconds
   }
-  
+  Serial.println("Calibration finished");
   delay(50);
 }
 
-void setupSonar() {
-  //not too much to do here
-  pinMode(sonarPin, OUTPUT);
-}
-
-boolean isCarDetected() {
+public boolean isCarDetected() {
+  //call this method to poll the PIR & check the range finder
+  //if the range finder returns a value under the threshold, that is
+  //interpreted as a car (when no car is present, range finder reads max dist)
+  //return true if car is present.
+  
+  //if the PIR goes high, check the range finder
   if(digitalRead(pirPin) == HIGH) {
     
     Serial.println("Motion detected @ " + String(millis()/1000) + " seconds");
@@ -56,7 +71,7 @@ float getMinRange(int s) {
     if (range < minRange)
       minRange = range;
       
-    delay(50); //wait before turning the sensor back on
+    delay(30); //wait before turning the sensor back on
   }
    
   return minRange;

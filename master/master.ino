@@ -8,6 +8,15 @@
   //this changes based on the direction (entry or exit)
   const String direct = "entry";
 
+  //Sonar stuff
+  const int sonarPin = 8; //the io pin we are using
+  const float threshhold = 265; //distance threshold in centimeters 
+  //anything under threshold counts as a car
+
+  //PIR stuff
+  const int calibrationTime = 10; //seconds to allow calibration
+  const int pirPin = 11;
+
 void setup() {
   Bridge.begin();
   Serial.begin(9600);
