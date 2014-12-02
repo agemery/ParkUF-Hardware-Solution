@@ -15,10 +15,16 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Polling for cars.");
-  if (isCarDetected()) { //if a car is detected update the server
-    updateServer();
+  int numCars = carsDetected(); 
+  
+  for (int i = 0; i <numCars;i++) {
+    Serial.println("Updating server");
+    //updateServer();
   }
+  /*if (isCarDetected()) { //if a car is detected update the server
+    Serial.println("Updating server");
+    updateServer();
+  }*/
 
 }
 

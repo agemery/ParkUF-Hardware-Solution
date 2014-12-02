@@ -1,6 +1,6 @@
 //Sonar stuff
 const int sonarPin = 8; //the io pin we are using
-const float threshhold = 265; //distance threshold in centimeters 
+const float threshold = 265; //distance threshold in centimeters 
 //anything under threshold counts as a car
   
 //PIR stuff
@@ -34,6 +34,69 @@ void setupPir() {
   delay(50);
 }
 
+int carsDetected() {
+  //instead of returning a boolena value indicating at maximum a single car,
+  //count the number of cars that have passed in a timining interval 
+  //based upon the spaces that exist between cars in a chain of cars
+  //for example, if three cars pass in an interval, we count the number
+  //of times the distance goes back to ~265(cm).
+  //so something like [168,165,268,190,191,192,189,268,267,268,140,141..]
+  //we can see that there are two breaks there, thus three cars
+  
+  if(digitalRead(pirPin == HIGH)) {
+    Serial.println("Motion detected @ " + String(millis()/1000) + " seconds");
+    int cars = countCars();
+    Serial.println(String(cars) + " cars detected");
+    return (cars); 
+  }
+  else {
+    return 0;
+  }
+}
+
+int countCars() {
+  unsigned long startTime = millis();
+  boolean isFirstCarPassed = false;
+  boolean isCarBreak = false;
+  int numCars = 0;
+  
+  //s is the length of time we will poll the range finder, in seconds
+  while((millis() - startTime)/1000 < detectionWindow) {
+    turnOnRangeFinder();
+    //the duration of the pulse is converted into the distance
+    float duration = pulseIn(sonarPin, HIGH); 
+    // convert to centimeters
+    float range = ((duration / 29.412) / 2);
+    
+    if (!isFirstCarPassed && (range < threshold)) {
+      //if the first car has not passed previously, and range is
+      //now below threshold, then this car is the first car in the chain
+      isFirstCarPassed = true;
+      numCars=1;
+    }
+    
+    if(isFirstCarPassed && !isCarBreak && (range >= (threshold-5))) { 
+      //setting it to 260 to be safe
+      //if the first car has already passed, and we see the range go 
+      //higher than 260, and we are not already on a car break, then
+      //this is a break in the chain of cars
+      isCarBreak = true;
+    }
+    
+    if(isFirstCarPassed && isCarBreak && (range < threshold)) {
+      //if the first car has already passed, and we have recorded that
+      //we were on a break in the chain, and if the range is now below threshold
+      //then this is a new car. increment numCars
+      numCars++;
+      isCarBreak = false; //not on a car break anymore
+    }
+    
+    Serial.println(range);      
+    delay(30); //wait before turning the sensor back on
+  }
+  return numCars;
+}
+    
 boolean isCarDetected() {
   //call this method to poll the PIR & check the range finder
   //if the range finder returns a value under the threshold, that is
@@ -45,12 +108,13 @@ boolean isCarDetected() {
     
     Serial.println("Motion detected @ " + String(millis()/1000) + " seconds");
     float dist = getMinRange();
-    Serial.print("Distance detected: " + String(dist) + " cm");
-    if(dist < threshhold)
+    Serial.println("Distance detected: " + String(dist) + " cm");
+    if(dist < threshold)
       return true;
     else
       return false;
   }
+  return false;
 }
 
 //returns minimum range found over the given interval
