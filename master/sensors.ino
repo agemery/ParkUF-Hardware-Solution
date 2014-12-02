@@ -54,11 +54,13 @@ int carsDetected() {
   }
 }
 
-int expandWindow(int w, int start) {
-  if ((w - (millis() - start)/1000) <= 2) {
-    return (w +1); //extend the window so we do not miss a car
-      }
+int expandWindow(int w, unsigned long t, unsigned long start) {
+  if ((t - start)/1000 > (w-2)) {
+    Serial.println("Window expanded. window= " + String(w));
+    return (w +2); //extend the window so we do not miss a car
+  }
   else
+    Serial.println("Window unchanged. window= " + String(w));
     return w;
 }
       
@@ -73,7 +75,7 @@ int countCars() {
   //car at the edge of the window 
   
   //s is the length of time we will poll the range finder, in seconds
-  while((millis() - startTime)/1000 < window) {
+  for(unsigned long time = millis(); (time - startTime)/1000 < window; time=millis()) {
     turnOnRangeFinder();
     //the duration of the pulse is converted into the distance
     float duration = pulseIn(sonarPin, HIGH); 
@@ -85,29 +87,33 @@ int countCars() {
       //now below threshold, then this car is the first car in the chain
       isFirstCarPassed = true;
       numCars=1;
-      window = expandWindow(window, startTime);
+      window = expandWindow(window, time, startTime);
+      isCarBreak = false;
     }
     
-    if(isFirstCarPassed && !isCarBreak && (range >= (threshold-5))) { 
-      //setting it to 260 to be safe
+    else if(isFirstCarPassed && !isCarBreak && (range >= (threshold))) { 
       //if the first car has already passed, and we see the range go 
-      //higher than 260, and we are not already on a car break, then
+      //higher than 265, and we are not already on a car break, then
       //this is a break in the chain of cars
       isCarBreak = true;
-      window = expandWindow(window, startTime);
+      window = expandWindow(window, time, startTime);
     }
     
-    if(isFirstCarPassed && isCarBreak && (range < threshold)) {
+    else if(isFirstCarPassed && isCarBreak && (range < threshold)) {
       //if the first car has already passed, and we have recorded that
       //we were on a break in the chain, and if the range is now below threshold
       //then this is a new car. increment numCars
       numCars++;
       isCarBreak = false; //not on a car break anymore
-      window = expandWindow(window, startTime);
+      window = expandWindow(window, time, startTime);
+    }
+    
+    else if(!isCarBreak && (range < threshold) ) {
+      window = expandWindow(window, time, startTime);
     }
     
     Serial.println(range);      
-    delay(30); //wait before turning the sensor back on
+    delay(100); //wait before turning the sensor back on
   }
   return numCars;
 }

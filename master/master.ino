@@ -5,7 +5,7 @@
 void setup() {
   Bridge.begin();
   Serial.begin(9600);
-  
+  Serial.println("Starting");
   //we will probably take this out when using in the field
   while(!Serial); //wait for serial monitor duh
   Serial.println("Serial up now");
@@ -15,6 +15,7 @@ void setup() {
 }
 
 void loop() {
+  Serial.println("new loop");
   int numCars = carsDetected(); 
   
   for (int i = 0; i <numCars;i++) {
