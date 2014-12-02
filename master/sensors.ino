@@ -8,7 +8,7 @@ const int pirPin = 11;
 const int calibrationTime = 10; //seconds to allow calibration
 //miliseconds sensor has to be low before all motion has stopped
 
-const int detectionWindow = 10; //duration to poll range finder
+const int detectionWindow = 4; //duration to poll range finder
 
 void setupSensors() {
   setupPir();
@@ -54,14 +54,26 @@ int carsDetected() {
   }
 }
 
+int expandWindow(int w, int start) {
+  if ((w - (millis() - start)/1000) <= 2) {
+    return (w +1); //extend the window so we do not miss a car
+      }
+  else
+    return w;
+}
+      
+
 int countCars() {
   unsigned long startTime = millis();
   boolean isFirstCarPassed = false;
   boolean isCarBreak = false;
   int numCars = 0;
+  int window = detectionWindow; 
+  //adjustable window extends when there is a car chain so we do not miss a 
+  //car at the edge of the window 
   
   //s is the length of time we will poll the range finder, in seconds
-  while((millis() - startTime)/1000 < detectionWindow) {
+  while((millis() - startTime)/1000 < window) {
     turnOnRangeFinder();
     //the duration of the pulse is converted into the distance
     float duration = pulseIn(sonarPin, HIGH); 
@@ -73,6 +85,7 @@ int countCars() {
       //now below threshold, then this car is the first car in the chain
       isFirstCarPassed = true;
       numCars=1;
+      window = expandWindow(window, startTime);
     }
     
     if(isFirstCarPassed && !isCarBreak && (range >= (threshold-5))) { 
@@ -81,6 +94,7 @@ int countCars() {
       //higher than 260, and we are not already on a car break, then
       //this is a break in the chain of cars
       isCarBreak = true;
+      window = expandWindow(window, startTime);
     }
     
     if(isFirstCarPassed && isCarBreak && (range < threshold)) {
@@ -89,6 +103,7 @@ int countCars() {
       //then this is a new car. increment numCars
       numCars++;
       isCarBreak = false; //not on a car break anymore
+      window = expandWindow(window, startTime);
     }
     
     Serial.println(range);      
