@@ -19,7 +19,7 @@ void loop() {
   
   for (int i = 0; i <numCars;i++) {
     Serial.println("Updating server");
-    //updateServer();
+    updateServer();
   }
   /*if (isCarDetected()) { //if a car is detected update the server
     Serial.println("Updating server");
